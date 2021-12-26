@@ -149,8 +149,13 @@ function [out] = ecoevo_model(tmax,total,host,symbiont,host_d,symbiont_d,space_s
             host_proportion_local(ii) = sum(total_new(Neighboor(jj,:))>0,'all')./neighbourhood;
         end
         host_proportion = host_density_dependent.*host_proportion_local+(1-host_density_dependent).*host_proportion_global;
-        germination = germination.*(proba<(host_germination-host_competition(host_proportion))); % comment for fixed competition
-%         germination = germination.*(proba<(host_germination-host_competition)); % uncomment for fixed competition
+
+%         comment for fixed competition
+%         germination = germination.*(proba<(host_germination-host_competition(host_proportion))); 
+
+%         uncomment for fixed competition
+        germination = germination.*(proba<(host_germination-host_competition)); 
+       
         germination(germination==0) = [];
         germination = germination.*(total_new(germination)==0);
         germination(germination==0) = []; % only keeps the positions of successful germinations       
@@ -203,17 +208,19 @@ function [out] = ecoevo_model(tmax,total,host,symbiont,host_d,symbiont_d,space_s
     number_s = sum(total_new==3,'all');
     fitness_s = f_basal_s(symbiont(total_new==3)).*f_mutu_s(host(total_new==3));    
     fitness_symbiont = fitness_s-mod(fitness_s,1) + binornd(1,mod(fitness_s,1));
-    % Competition on fitness for symbiont
-    index = find(total_new==3);
-    symbiont_proportion_local = zeros(number_s,1);
-    for ii = 1:number_s
-        jj = index(ii);
-        symbiont_proportion_local(ii) = sum(total_new(Neighboor(jj,:))==3,'all')./neighbourhood;
-    end
-    symbiont_proportion = symbiont_density_dependent.*symbiont_proportion_local+(1-symbiont_density_dependent).*symbiont_proportion_global;
     
-    fitness_symbiont = fitness_symbiont.*(1 - (symbiont_proportion.*coeff_compet).^gamma_symbiont); % Apply competition on fitness
-    fitness_symbiont = fitness_symbiont.*(1 - symbiont_d(total_new==3).*coeff_disp); % Apply dispersal cost on fitness
+    % Competition on fitness for symbiont (not shown in results)
+%     index = find(total_new==3);
+%     symbiont_proportion_local = zeros(number_s,1);
+%     for ii = 1:number_s
+%         jj = index(ii);
+%         symbiont_proportion_local(ii) = sum(total_new(Neighboor(jj,:))==3,'all')./neighbourhood;
+%     end
+%     symbiont_proportion = symbiont_density_dependent.*symbiont_proportion_local+(1-symbiont_density_dependent).*symbiont_proportion_global;
+%     fitness_symbiont = fitness_symbiont.*(1 - (symbiont_proportion.*coeff_compet).^gamma_symbiont); % Apply competition on fitness
+    
+    % Apply dispersal cost on fitness
+    fitness_symbiont = fitness_symbiont.*(1 - symbiont_d(total_new==3).*coeff_disp);
     fitness_symbiont = fitness_symbiont-mod(fitness_symbiont,1)+binornd(1,mod(fitness_symbiont,1));
     
     global_disp_s(total_new==3) = binornd(fitness_symbiont,symbiont_d(total_new==3).*ones(size(fitness_symbiont))); % number of offsprings propagated by global dispersal
@@ -280,7 +287,7 @@ function [out] = ecoevo_model(tmax,total,host,symbiont,host_d,symbiont_d,space_s
     % update populations matrices
     total_old = total_new;
 
-%     saved some values
+%     variables saved during dynamics
 %     if mod(time,1)==0 % allow to reduce the number of saved values
 %         simulation = [simulation,total_new];
 %         Host = [Host,host];
@@ -305,7 +312,6 @@ function [out] = ecoevo_model(tmax,total,host,symbiont,host_d,symbiont_d,space_s
             time_speciation = time;
             test = 1;
             speciation = 1;
-%             break % for proba of emergence, break if emergence to save computation time
         end
     end
     
@@ -319,51 +325,57 @@ function [out] = ecoevo_model(tmax,total,host,symbiont,host_d,symbiont_d,space_s
     
     time = time+1; 
 
-    if sum(total_new==3,'all')==0 || sum(total_new,'all')==0
-        if sum(total_new==3,'all')==0 
-            collapse = 1; % symbiont collapse
-        end
-        if sum(total_new,'all')==0
-            collapse = 2; % full system collapse
-        end
-        
+%     Comment that when testing the dependency of host alone
+%     if sum(total_new==3,'all')==0 || sum(total_new,'all')==0     
+%         if sum(total_new==3,'all')==0 
+%             collapse = 1; % symbiont collapse
+%         end
+%         
+%         if sum(total_new,'all')==0
+%             collapse = 2; % full system collapse
+%         end
+%         
+%         break
+%     else
+%         collapse = 0;
+%     end
+    
+%     Uncomment for testing the host dependency
+    if sum(total_new,'all')==0
+        collapse = 2;
         break
+    else
+        collapse = 0;
     end
 
-    % for host dependance test
-%     if sum(total_new,'all')==0
-%         collapse = 2;
-%         break
-%     end
     end
     
-    
-    % save only at the end 
-%     simulation = total_new;
-%     Host = host;
-%     Host_d = host_d;
-%     Mutualist = mutualist;
-%     Mutualist_d = mutualist_d; 
+    % variables saved only at the last final step 
+    simulation = total_new;
+    Host = host;
+    Host_d = host_d;
+    Symbiont = symbiont;
+    Symbiont_d = symbiont_d; 
 
     % final outputs  
-%     out.simulation = simulation;
-%     out.host = Host;
-%     out.host_d = Host_d;
-%     out.symbiont = Symbiont;
-%     out.symbiont_d = Symbiont_d;
-%     out.time = time;
-%     out.persist = collapse; % 0 = persist ; 1 = only symbiont collapse ; 2 = host collapse
-out.symbiont_density = symbiont_density;
-out.parasite_density = parasite_density;
-out.mutualiste_density = mutualiste_density;
-out.host_density = host_density;
-out.host_mean_trait = host_mean_trait;
-out.symbiont_mean_trait = symbiont_mean_trait;
-out.symbiont_mutualist_mean_trait = symbiont_mutualist_mean_trait;
-out.symbiont_parasite_mean_trait = symbiont_parasite_mean_trait;
-if test == 0 % there was no speciation
-    time_speciation = NaN;
-end
-out.time_speciation = time_speciation;
-out.speciation = speciation;
+    out.simulation = simulation;
+    out.host = Host;
+    out.host_d = Host_d;
+    out.symbiont = Symbiont;
+    out.symbiont_d = Symbiont_d;
+    %     out.time = time;
+    out.persist = collapse; % 0 = persist ; 1 = symbiont collapse ; 2 = host collapse
+    out.symbiont_density = symbiont_density;
+    out.parasite_density = parasite_density;
+    out.mutualiste_density = mutualiste_density;
+    out.host_density = host_density;
+    out.host_mean_trait = host_mean_trait;
+    out.symbiont_mean_trait = symbiont_mean_trait;
+    out.symbiont_mutualist_mean_trait = symbiont_mutualist_mean_trait;
+    out.symbiont_parasite_mean_trait = symbiont_parasite_mean_trait;
+    if test == 0 % there was no speciation
+        time_speciation = NaN;
+    end
+    out.time_speciation = time_speciation;
+    out.speciation = speciation;
 end 
