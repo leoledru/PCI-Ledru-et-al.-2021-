@@ -185,8 +185,9 @@ function [out] = ecoevo_model(tmax,total,host,symbiont,host_d,symbiont_d,space_s
            magnitude = (muta_max-muta_min).*exprnd(exp_mu,length(germination),1) + muta_min; % random mutation magnitude : EXP
            magnitude(magnitude>muta_max) = 0; % when a mutation exceed the muta_max it is cancelled           
            host(germination) = (proba<p_mut).*magnitude.*direction + host(germination); % set the new trait value for host-offspring (if mutation)
-           host(germination(host(germination)>1)) = host(germination(host(germination)>1))-2.*magnitude(host(germination)>1);
-           host(germination(host(germination)<0)) = host(germination(host(germination)<0))+2.*magnitude(host(germination)<0);  
+           % cancel mutation if out of trait domain
+           host(germination(host(germination)>1)) = host(germination(host(germination)>1))-1.*magnitude(host(germination)>1);
+           host(germination(host(germination)<0)) = host(germination(host(germination)<0))+1.*magnitude(host(germination)<0);  
        end
        if muta_epsilon_host == 1
            % epsilon
@@ -196,8 +197,9 @@ function [out] = ecoevo_model(tmax,total,host,symbiont,host_d,symbiont_d,space_s
            magnitude = (muta_max-muta_min).*exprnd(exp_mu,length(germination),1) + muta_min; % random mutation magnitude : EXP
            magnitude(magnitude>muta_max) = 0; % when a mutation exceed the muta_max it is cancelled    
            host_d(germination) = (proba<p_mut).*magnitude.*direction + host_d(germination); % set the new trait value for host-offspring (if mutation)
-           host_d(germination(host_d(germination)>1)) = host_d(germination(host_d(germination)>1))-2.*magnitude(host_d(germination)>1);
-           host_d(germination(host_d(germination)<0)) = host_d(germination(host_d(germination)<0))+2.*magnitude(host_d(germination)<0);   
+           % cancel mutation if out of trait domain
+           host_d(germination(host_d(germination)>1)) = host_d(germination(host_d(germination)>1))-1.*magnitude(host_d(germination)>1);
+           host_d(germination(host_d(germination)<0)) = host_d(germination(host_d(germination)<0))+1.*magnitude(host_d(germination)<0);   
        end
     end
 
@@ -269,8 +271,9 @@ function [out] = ecoevo_model(tmax,total,host,symbiont,host_d,symbiont_d,space_s
            magnitude = (muta_max-muta_min).*exprnd(exp_mu,length(colonization),1) + muta_min; % random mutation magnitude : EXP
            magnitude(magnitude>muta_max) = 0; % when a mutation exceed the muta_max it is cancelled    
            symbiont(colonization) = (proba<p_mut).*magnitude.*direction + symbiont(colonization); % set the new trait value for host-offspring (if mutation)
-           symbiont(colonization(symbiont(colonization)>1)) = symbiont(colonization(symbiont(colonization)>1))-2.*magnitude(symbiont(colonization)>1);
-           symbiont(colonization(symbiont(colonization)<0)) = symbiont(colonization(symbiont(colonization)<0))+2.*magnitude(symbiont(colonization)<0);  
+           % cancel mutation if out of trait domain
+           symbiont(colonization(symbiont(colonization)>1)) = symbiont(colonization(symbiont(colonization)>1))-1.*magnitude(symbiont(colonization)>1);
+           symbiont(colonization(symbiont(colonization)<0)) = symbiont(colonization(symbiont(colonization)<0))+1.*magnitude(symbiont(colonization)<0);  
        end
        if muta_epsilon_symbiont == 1
            % epsilon
@@ -280,8 +283,9 @@ function [out] = ecoevo_model(tmax,total,host,symbiont,host_d,symbiont_d,space_s
            magnitude = (muta_max-muta_min).*exprnd(exp_mu,length(colonization),1) + muta_min; % random mutation magnitude : EXP
            magnitude(magnitude>muta_max) = 0; % when a mutation exceed the muta_max it is cancelled    
            symbiont_d(colonization) = (proba<p_mut).*magnitude.*direction + symbiont_d(colonization); % set the new trait value for host-offspring (if mutation)
-           symbiont_d(colonization(symbiont_d(colonization)>1)) = symbiont_d(colonization(symbiont_d(colonization)>1))-2.*magnitude(symbiont_d(colonization)>1);
-           symbiont_d(colonization(symbiont_d(colonization)<0)) = symbiont_d(colonization(symbiont_d(colonization)<0))+2.*magnitude(symbiont_d(colonization)<0);   
+           % cancel mutation if out of trait domain
+           symbiont_d(colonization(symbiont_d(colonization)>1)) = symbiont_d(colonization(symbiont_d(colonization)>1))-1.*magnitude(symbiont_d(colonization)>1);
+           symbiont_d(colonization(symbiont_d(colonization)<0)) = symbiont_d(colonization(symbiont_d(colonization)<0))+1.*magnitude(symbiont_d(colonization)<0);   
        end
     end
     % update populations matrices
