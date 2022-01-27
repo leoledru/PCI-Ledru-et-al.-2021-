@@ -1,26 +1,71 @@
 %% FIGURE 2
 
 %% panel a
-load('time_to_speciation_gamma1.mat')
+
+load('data/time_to_speciation_gamma1.mat')
 time = out_time_speciation;
 proba_emergence = sum(1 - isnan(out_time_speciation))/length(out_time_speciation);
-load('time_to_speciation_gamma1_dispcost45.mat')
+load('data/time_to_speciation_gamma1_dispcost45.mat')
 time = [time,out_time_speciation];
 proba_emergence = [proba_emergence,sum(1 - isnan(out_time_speciation))/length(out_time_speciation)];
-load('time_to_speciation.mat')
+load('data/time_to_speciation.mat')
 time = [time,out_time_speciation];
 proba_emergence = [proba_emergence,sum(1 - isnan(out_time_speciation))/length(out_time_speciation)];
-load('time_to_speciation_gamma02_dispcost45.mat')
+load('data/time_to_speciation_gamma02_dispcost45.mat')
 time = [time,out_time_speciation];
 proba_emergence = [proba_emergence,sum(1 - isnan(out_time_speciation))/length(out_time_speciation)];
-
-boxplot(log10(time))
+%% BOXPLOTS (OLD VERSION)
+boxplot(time)
 ylabel('transition time (log scale)','interpreter','latex','FontSize',20)
+ax = gca;
+ax.YAxis.Scale = "log";
 proba_emergence % show the probablities
+%% HISTROGRAMS (NEW VERSION)
+subplot(1,2,1)
+h = histogram(time(:,1),15)
+% h = histogram(time(:,1),logspace(2,5));
+h.FaceColor = 'k';
+h.FaceAlpha = .4;
 
+hold on
+h2 = histogram(time(:,3),15)
+% h2 = histogram(time(:,3),logspace(2,5))
+h2.FaceAlpha = .2;
+h.BinEdges = h2.BinEdges;
+hold off
+
+% ax = gca;
+% ax.XAxis.Scale ="log";
+
+yticks(linspace(0,150,11));
+xlabel('time','interpreter','latex','Fontsize',20)
+ylabel('number of transitions','interpreter','latex','Fontsize',20)
+legend({['weak competition' newline '$\gamma_C = 1$'],['strong competition' newline '$\gamma_C = 0.2$']}...
+    ,'interpreter','latex','Fontsize',15)
+title('dispersal cost = 0','interpreter','latex','Fontsize',20)
+
+subplot(1,2,2)
+h = histogram(time(:,2),16);
+% h = histogram(time(:,2),logspace(2,2));
+h.FaceColor = 'k';
+h.FaceAlpha = .4;
+h.BinEdges = [100 213 326 439 552 665 778 891 1004 1117 1230 1343 1456 1569 1682 1795 1908];
+
+hold on
+h = histogram(time(:,4),16);
+% h = histogram(time(:,4),logspace(2,2));
+h.FaceAlpha = .2;
+hold off
+
+yticks(linspace(0,300,11));
+xlabel('time','interpreter','latex','Fontsize',20)
+ylabel('number of transitions','interpreter','latex','Fontsize',20)
+legend({['weak competition' newline '$\gamma_C = 1$'],['strong competition' newline '$\gamma_C = 0.2$']}...
+    ,'interpreter','latex','Fontsize',15)
+title('dispersal cost = 0.45','interpreter','latex','Fontsize',20)
 
 %% panel b
-load('simulations_gamma02_h.mat')
+load('data/simulations_gamma02_h.mat')
 
 out_time_speciation(out_time_speciation==0) = NaN; % no emergence
 low_bound = 2000;
