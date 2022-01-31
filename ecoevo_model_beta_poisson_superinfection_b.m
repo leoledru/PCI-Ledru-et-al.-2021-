@@ -1,4 +1,4 @@
-function [out] = ecoevo_model_beta_poisson_superinfection(tmax,total,host,symbiont,host_d,symbiont_d,space_size,...
+function [out] = ecoevo_model_beta_poisson_superinfection_b(tmax,total,host,symbiont,host_d,symbiont_d,space_size,...
                  neighbourhood, host_mortality, symbiont_mortality,...
                  host_density_dependent, host_germination, host_competition,...
                  symbiont_colonization, p_mut, muta_max, muta_min, muta_alpha, muta_epsilon_host,...
@@ -284,11 +284,24 @@ function [out] = ecoevo_model_beta_poisson_superinfection(tmax,total,host,symbio
                     participants_2 = index_d(disp==colonization(ii))'; % same thing but for trait epsilon
           
                     % competition for colonization : lottery with weights = 1 - interaction_trait
-                    sample = 1:length(participants_1); % number of offspring in competition for colonization
-                    proba = 1 - participants_1; % higher trait (mutualist) = lower probability to win the competition for colonization
-                    proba = proba./(sum(proba)); % normalization
-                    proba(proba>superinfection_max) = proba(proba>superinfection_max).*superinfection_max;
-                    proba = proba./(sum(proba)); % normalization
+                    sample = length(participants_1); % number of offspring in competition for colonization
+
+                    if sample==2
+                        diff_trait = abs(diff(participants_1)); % x2 - x1
+                        diff_trait = diff_trait.*superinfection_max;
+%                         diff_trait = diff_trait*(diff_trait<=superinfection_max) + superinfection_max*(diff_trait>=superinfection_max);
+                        proba = [.5-diff_trait , .5+diff_trait]; % 0.5 = uniform loterry ; +/- diff to consider the trait
+                        proba(proba<0) = 0;
+                        proba(proba>1) = 1;
+                    else % more than 2 competitors
+                        diff_trait = mean(participants_1 - participants_1',1).*(-1); % *(-1) because a lower trait has a higher proba of colonization
+                        diff_trait = diff_trait.*superinfection_max;
+%                         diff_trait(abs(diff_trait)>superinfection_max) = superinfection_max.*sign(diff_trait(abs(diff_trait)>superinfection_max));
+                        proba = (1/sample).*ones(1,sample) + diff_trait;
+                        proba(proba<0) = 0;
+                        proba(proba>1) = 1;
+                    end
+
                     winner = randsample(sample,1,true,proba);
                     symbiont(colonization(ii)) = participants_1(winner);
                     symbiont_d(colonization(ii)) = participants_2(winner);
@@ -299,11 +312,24 @@ function [out] = ecoevo_model_beta_poisson_superinfection(tmax,total,host,symbio
                     participants_2 = [index_d(disp==colonization(ii))',symbiont_d(colonization(ii))]; % add the symbiont already present
 
                     % competition for colonization : lottery with weights = 1 - interaction_trait
-                    sample = 1:length(participants_1); % number of offspring in competition for colonization
-                    proba = 1 - participants_1; % higher trait (mutualist) = lower probability to win the competition for colonization
-                    proba = proba./(sum(proba)); % normalization
-                    proba(proba>superinfection_max) = proba(proba>superinfection_max).*superinfection_max;
-                    proba = proba./(sum(proba)); % normalization
+                    sample = length(participants_1); % number of offspring in competition for colonization
+                    
+                    if sample==2
+                        diff_trait = abs(diff(participants_1)); % x2 - x1
+                        diff_trait = diff_trait.*superinfection_max;
+%                         diff_trait = diff_trait*(diff_trait<=superinfection_max) + superinfection_max*(diff_trait>=superinfection_max);
+                        proba = [.5-diff_trait , .5+diff_trait]; % 0.5 = uniform loterry ; +/- diff to consider the trait
+                        proba(proba<0) = 0;
+                        proba(proba>1) = 1;
+                    else % more than 2 competitors
+                        diff_trait = mean(participants_1 - participants_1',1).*(-1); % *(-1) because a lower trait has a higher proba of colonization
+                        diff_trait = diff_trait.*superinfection_max;
+%                         diff_trait(abs(diff_trait)>superinfection_max) = superinfection_max.*sign(diff_trait(abs(diff_trait)>superinfection_max));
+                        proba = (1/sample).*ones(1,sample) + diff_trait;
+                        proba(proba<0) = 0;
+                        proba(proba>1) = 1;
+                    end
+
                     winner = randsample(sample,1,true,proba);
                     symbiont(colonization(ii)) = participants_1(winner);
                     symbiont_d(colonization(ii)) = participants_2(winner);
@@ -314,11 +340,15 @@ function [out] = ecoevo_model_beta_poisson_superinfection(tmax,total,host,symbio
                     participants_2 = [index_d(disp==colonization(ii))',symbiont_d(colonization(ii))];
 
                     % competition for colonization : lottery with weights = 1 - interaction_trait
-                    sample = 1:length(participants_1); % number of offspring in competition for colonization
-                    proba = 1 - participants_1; % higher trait (mutualist) = lower probability to win the competition for colonization
-                    proba = proba./(sum(proba)); % normalization
-                    proba(proba>superinfection_max) = proba(proba>superinfection_max).*superinfection_max;
-                    proba = proba./(sum(proba)); % normalization
+                    sample = length(participants_1); % number of offspring in competition for colonization
+
+                    diff_trait = abs(diff(participants_1)); % x2 - x1
+                    diff_trait = diff_trait.*superinfection_max;
+%                     diff_trait = diff_trait*(diff_trait<=superinfection_max) + superinfection_max*(diff_trait>=superinfection_max);
+                    proba = [.5-diff_trait , .5+diff_trait]; % 0.5 = uniform loterry ; +/- diff to consider the trait
+                    proba(proba<0) = 0;
+                    proba(proba>1) = 1;
+
                     winner = randsample(sample,1,true,proba);
                     symbiont(colonization(ii)) = participants_1(winner);
                     symbiont_d(colonization(ii)) = participants_2(winner);
@@ -377,13 +407,13 @@ function [out] = ecoevo_model_beta_poisson_superinfection(tmax,total,host,symbio
 %     end
 
 %     compute densities and mean trait
-    symbiont_density = [symbiont_density,sum(total_new==3)/length(total_new)];
-    symb = symbiont(total_new==3);
-    parasite_density = [parasite_density,sum(symb<0.475)/length(total_new)];
-    mutualiste_density = [mutualiste_density,sum(symb>0.475)/length(total_new)];
-    host_density = [host_density,sum(total_new>0)/length(total_new)];
-    host_mean_trait = [host_mean_trait,mean(host(total_new~=0))];
-    symbiont_mean_trait = [symbiont_mean_trait,mean(symbiont(total_new==3))];
+%     symbiont_density = [symbiont_density,sum(total_new==3)/length(total_new)];
+%     symb = symbiont(total_new==3);
+%     parasite_density = [parasite_density,sum(symb<0.475)/length(total_new)];
+%     mutualiste_density = [mutualiste_density,sum(symb>0.475)/length(total_new)];
+%     host_density = [host_density,sum(total_new>0)/length(total_new)];
+%     host_mean_trait = [host_mean_trait,mean(host(total_new~=0))];
+%     symbiont_mean_trait = [symbiont_mean_trait,mean(symbiont(total_new==3))];
     
     % speciation test
     if test == 0
@@ -395,13 +425,13 @@ function [out] = ecoevo_model_beta_poisson_superinfection(tmax,total,host,symbio
         end
     end
     
-    if test==1
-        symb = symbiont(total_new==3);
-        s_mut = symb(symb>0.475);
-        symbiont_mutualist_mean_trait = [symbiont_mutualist_mean_trait,nanmean(s_mut)];
-        s_para = symb(symb<0.475);
-        symbiont_parasite_mean_trait = [symbiont_parasite_mean_trait,nanmean(s_para)];
-    end
+%     if test==1
+%         symb = symbiont(total_new==3);
+%         s_mut = symb(symb>0.475);
+%         symbiont_mutualist_mean_trait = [symbiont_mutualist_mean_trait,nanmean(s_mut)];
+%         s_para = symb(symb<0.475);
+%         symbiont_parasite_mean_trait = [symbiont_parasite_mean_trait,nanmean(s_para)];
+%     end
     
     time = time+1; 
 
@@ -444,15 +474,15 @@ function [out] = ecoevo_model_beta_poisson_superinfection(tmax,total,host,symbio
     out.symbiont = Symbiont;
     out.symbiont_d = Symbiont_d;
     %     out.time = time;
-    out.persist = collapse; % 0 = persist ; 1 = symbiont collapse ; 2 = host collapse
-    out.symbiont_density = symbiont_density;
-    out.parasite_density = parasite_density;
-    out.mutualiste_density = mutualiste_density;
-    out.host_density = host_density;
-    out.host_mean_trait = host_mean_trait;
-    out.symbiont_mean_trait = symbiont_mean_trait;
-    out.symbiont_mutualist_mean_trait = symbiont_mutualist_mean_trait;
-    out.symbiont_parasite_mean_trait = symbiont_parasite_mean_trait;
+%     out.persist = collapse; % 0 = persist ; 1 = symbiont collapse ; 2 = host collapse
+%     out.symbiont_density = symbiont_density;
+%     out.parasite_density = parasite_density;
+%     out.mutualiste_density = mutualiste_density;
+%     out.host_density = host_density;
+%     out.host_mean_trait = host_mean_trait;
+%     out.symbiont_mean_trait = symbiont_mean_trait;
+%     out.symbiont_mutualist_mean_trait = symbiont_mutualist_mean_trait;
+%     out.symbiont_parasite_mean_trait = symbiont_parasite_mean_trait;
     if test == 0 % there was no speciation
         time_speciation = NaN;
     end
