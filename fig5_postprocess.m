@@ -98,3 +98,23 @@ xlim([0 15000])
 xlabel('time','interpreter','latex','FontSize',25)
 ylabel('\% of mutualistic symbiont','interpreter','latex','FontSize',25)
 
+%% panel d
+load('data/mutualist_emerg_then_kill_center.mat')
+
+Mutualist_tot(simulation_tot~=3) = NaN;
+simulation_tot(Mutualist_tot<0.475) = 2;
+simulation_tot(Mutualist_tot>0.475) = 3;
+mut_percent = sum(simulation_tot==3,1)./sum(simulation_tot>1,1) .* 100;
+
+plot(mut_percent,'k','LineWidth',2)
+xlabel('time','interpreter','latex','FontSize',20)
+ylabel('percentage of mutualistic symbionts','interpreter','latex','FontSize',20)
+xlim([0 20000])
+%% smooth
+[p, S, mu] = polyfit(1:1:length(mut_percent), mut_percent, 5);
+v = polyval(p, 1:1:length(mut_percent), [], mu);
+
+plot(v,'k','LineWidth',3)
+xlabel('time','interpreter','latex','FontSize',20)
+ylabel('percentage of mutualistic symbionts','interpreter','latex','FontSize',20)
+xlim([0 20000])
