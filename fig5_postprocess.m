@@ -111,10 +111,17 @@ xlabel('time','interpreter','latex','FontSize',20)
 ylabel('percentage of mutualistic symbionts','interpreter','latex','FontSize',20)
 xlim([0 20000])
 %% smooth
-[p, S, mu] = polyfit(1:1:length(mut_percent), mut_percent, 5);
-v = polyval(p, 1:1:length(mut_percent), [], mu);
-
-plot(v,'k','LineWidth',3)
+% [p, S, mu] = polyfit(1:1:length(mut_percent), mut_percent, 5);
+% v = polyval(p, 1:1:length(mut_percent), [], mu);
+% plot(v,'k','LineWidth',3)
+close
+windowSize = 10; 
+b = (1/windowSize)*ones(1,windowSize);
+a = 1;
+smooth_line = filter(b,a,mut_percent(1:100:end));
+smooth_line_2 = filter(b,a,smooth_line);
+plot((1:100:20002),smooth_line_2.*100,'k','LineWidth',4)
 xlabel('time','interpreter','latex','FontSize',20)
 ylabel('percentage of mutualistic symbionts','interpreter','latex','FontSize',20)
 xlim([0 20000])
+
