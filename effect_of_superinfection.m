@@ -2,7 +2,8 @@
 clear all; clc;
 
 n_loop = 20;
-superinfection_max_loop = linspace(.1,2,11);
+% superinfection_max_loop = linspace(.1,1,10);
+superinfection_max_loop = 0;
 n_rep = length(superinfection_max_loop);
 
 out_host = cell(n_loop,n_rep);
@@ -85,7 +86,13 @@ for j = 1:length(superinfection_max_loop)
         %                  symbiont_colonization, p_mut, muta_max, muta_min, muta_alpha, muta_epsilon_host,...
         %                  muta_epsilon_symbiont,symbiont_density_dependent,coeff_compet,gamma_symbiont,coeff_disp,coeff_disp_h,exp_mu)
         %     
-        synchrone = ecoevo_model_beta_poisson_superinfection_b(tmax,total,host,symbiont,host_d,symbiont_d,space_size,...
+%         synchrone = ecoevo_model_beta_poisson_superinfection_b(tmax,total,host,symbiont,host_d,symbiont_d,space_size,...
+%                      neighbourhood, host_mortality, symbiont_mortality,...
+%                      host_density_dependent, host_germination, host_competition,...
+%                      symbiont_colonization, p_mut, muta_max, muta_min, muta_alpha, muta_epsilon_host,...
+%                      muta_epsilon_symbiont,symbiont_density_dependent,coeff_compet,gamma_symbiont,coeff_disp,...
+%                      coeff_disp_h,exp_mu,superinfection_max)
+        synchrone = ecoevo_model_beta_poisson_superinfection_c(tmax,total,host,symbiont,host_d,symbiont_d,space_size,...
                      neighbourhood, host_mortality, symbiont_mortality,...
                      host_density_dependent, host_germination, host_competition,...
                      symbiont_colonization, p_mut, muta_max, muta_min, muta_alpha, muta_epsilon_host,...
@@ -109,14 +116,30 @@ for j = 1:length(superinfection_max_loop)
         out_simulation{i,j} = synchrone.simulation;
         
     end
-    save(['test_superinfection_dispcost45_2','.mat'],'out_simulation',...
+    save(['test_superinfection_dispcost45_c_0','.mat'],'out_simulation',...
      'out_time_speciation','out_host','out_host_d','out_symbiont','out_symbiont_d','-v7.3')
 end
-save(['test_superinfection_dispcost45_2','.mat'],'out_simulation',...
+save(['test_superinfection_dispcost45_c_0','.mat'],'out_simulation',...
  'out_time_speciation','out_host','out_host_d','out_symbiont','out_symbiont_d','-v7.3')
 
 %% POSTPROCESS
-load('test_superinfection_dispcost45.mat')
+% load('test_superinfection_dispcost45.mat')
+% Host = out_host;
+% Host_d = out_host_d;
+% Symbiont = out_symbiont;
+% Symbiont_d = out_symbiont_d;
+% Simulation = out_simulation;
+% Time_speciation = out_time_speciation;
+% 
+% load('test_superinfection_dispcost45_2.mat')
+% Host = [Host;out_host];
+% Host_d = [Host_d;out_host_d];
+% Symbiont = [Symbiont;out_symbiont];
+% Symbiont_d = [Symbiont_d;out_symbiont_d];
+% Simulation = [Simulation;out_simulation];
+% Time_speciation = [Time_speciation;out_time_speciation];
+
+load('test_superinfection_dispcost45_c_0.mat')
 Host = out_host;
 Host_d = out_host_d;
 Symbiont = out_symbiont;
@@ -124,21 +147,26 @@ Symbiont_d = out_symbiont_d;
 Simulation = out_simulation;
 Time_speciation = out_time_speciation;
 
-load('test_superinfection_dispcost45_2.mat')
-Host = [Host;out_host];
-Host_d = [Host_d;out_host_d];
-Symbiont = [Symbiont;out_symbiont];
-Symbiont_d = [Symbiont_d;out_symbiont_d];
-Simulation = [Simulation;out_simulation];
-Time_speciation = [Time_speciation;out_time_speciation];
+load('test_superinfection_dispcost45_c.mat')
+Host = [Host,out_host];
+Host_d = [Host_d,out_host_d];
+Symbiont = [Symbiont,out_symbiont];
+Symbiont_d = [Symbiont_d,out_symbiont_d];
+Simulation = [Simulation,out_simulation];
+Time_speciation = [Time_speciation,out_time_speciation];
+
+superinfection_max_loop = [0,linspace(.1,1,10)];
 %%
-superinfection_max_loop = linspace(.1,2,11);
+% superinfection_max_loop = linspace(.1,2,11);
 proba_transi = mean(~isnan(Time_speciation),1);
+% proba_transi_0 = 1; % without superinfection -> Figure 5, panel a
+% proba_transi = [proba_transi_0,proba_transi];
 
 subplot(1,2,1)
+% plot([0,superinfection_max_loop],proba_transi,'-*k','LineWidth',3)
 plot(superinfection_max_loop,proba_transi,'-*k','LineWidth',3)
-xlim([min(superinfection_max_loop),max(superinfection_max_loop)]);
-xticks(superinfection_max_loop);
+% xlim([min(superinfection_max_loop),max(superinfection_max_loop)]);
+% xticks([0,superinfection_max_loop]);
 xlabel('intensity of superinfection','interpreter','latex','FontSize',20)
 ylabel('probability of transition','interpreter','latex','FontSize',20)
 %%
@@ -153,11 +181,16 @@ for i = 1:size(Symbiont,2)
     end
     Mut_percent = [Mut_percent, nanmean(mut_percent)];
 end
-
-subplot(1,2,2)
-plot(superinfection_max_loop,Mut_percent.*100,'-*k','LineWidth',3)
-xlim([min(superinfection_max_loop),max(superinfection_max_loop)]);
-xticks(superinfection_max_loop);
+% Mut_percent_0 = 0.37; % without superinfection -> Figure 5, panel a
+% Mut_percent = [Mut_percent_0, Mut_percent];
+%%
+% subplot(1,2,2)
+% plot([0,superinfection_max_loop(1:6)],Mut_percent(1:7).*100,'-k','LineWidth',3)
+plot(superinfection_max_loop,Mut_percent.*100,'-k','LineWidth',3)
+hold on
+plot([0 1], [10 10], '--r', 'LineWidth',2)
+hold off
+xlim([0,1]);
 xlabel('intensity of superinfection','interpreter','latex','FontSize',20)
 ylabel('\% of mutualistic symbionts','interpreter','latex','FontSize',20)
 %%
@@ -181,35 +214,48 @@ for i = 1:size(Symbiont,2)
     S_tot_d = [S_tot_d,S_d];
 end
 %%
-subplot(2,5,1)
-scatter(S_tot(:,1),S_tot_d(:,1),10,'filled')
+subplot(1,5,1)
+scatter(S_tot(:,1),S_tot_d(:,1),10,'filled','k')
 xlabel('interaction trait','interpreter','latex','FontSize',15)
 ylabel('dispersal trait','interpreter','latex','FontSize',15)
-title(['superfection = ', num2str(superinfection_max_loop(1))])
-subplot(2,5,2)
-scatter(S_tot(:,2),S_tot_d(:,2),10,'filled')
-title(['superfection = ', num2str(superinfection_max_loop(2))])
-subplot(2,5,3)
-scatter(S_tot(:,3),S_tot_d(:,3),10,'filled')
-title(['superfection = ', num2str(superinfection_max_loop(3))])
-subplot(2,5,4)
-scatter(S_tot(:,4),S_tot_d(:,4),10,'filled')
-title(['superfection = ', num2str(superinfection_max_loop(4))])
-subplot(2,5,5)
-scatter(S_tot(:,5),S_tot_d(:,5),10,'filled')
-title(['superfection = ', num2str(superinfection_max_loop(5))])
-subplot(2,5,6)
-scatter(S_tot(:,6),S_tot_d(:,6),10,'filled')
-title(['superfection = ', num2str(superinfection_max_loop(6))])
-subplot(2,5,7)
-scatter(S_tot(:,7),S_tot_d(:,7),10,'filled')
-title(['superfection = ', num2str(superinfection_max_loop(7))])
-subplot(2,5,8)
-scatter(S_tot(:,8),S_tot_d(:,8),10,'filled')
-title(['superfection = ', num2str(superinfection_max_loop(8))])
-subplot(2,5,9)
-scatter(S_tot(:,9),S_tot_d(:,9),10,'filled')
-title(['superfection = ', num2str(superinfection_max_loop(9))])
-subplot(2,5,10)
-scatter(S_tot(:,10),S_tot_d(:,10),10,'filled')
-title(['superfection = ', num2str(superinfection_max_loop(10))])
+title(['maximal superinfection'], ['= ',num2str(round(superinfection_max_loop(1),1))],...
+    'interpreter','latex','FontSize',15)
+subplot(1,5,2)
+scatter(S_tot(:,2),S_tot_d(:,2),10,'filled','k')
+xlabel('interaction trait','interpreter','latex','FontSize',15)
+ylabel('dispersal trait','interpreter','latex','FontSize',15)
+title(['maximal superinfection'], ['= ',num2str(round(superinfection_max_loop(2),1))],...
+    'interpreter','latex','FontSize',15)
+subplot(1,5,3)
+scatter(S_tot(:,3),S_tot_d(:,3),10,'filled','k')
+xlabel('interaction trait','interpreter','latex','FontSize',15)
+ylabel('dispersal trait','interpreter','latex','FontSize',15)
+title(['maximal superinfection'], ['= ',num2str(round(superinfection_max_loop(3),1))],...
+    'interpreter','latex','FontSize',15)
+subplot(1,5,4)
+scatter(S_tot(:,4),S_tot_d(:,4),10,'filled','k')
+xlabel('interaction trait','interpreter','latex','FontSize',15)
+ylabel('dispersal trait','interpreter','latex','FontSize',15)
+title(['maximal superinfection'], ['= ',num2str(round(superinfection_max_loop(4),1))],...
+    'interpreter','latex','FontSize',15)
+subplot(1,5,5)
+scatter(S_tot(:,5),S_tot_d(:,5),10,'filled','k')
+xlabel('interaction trait','interpreter','latex','FontSize',15)
+ylabel('dispersal trait','interpreter','latex','FontSize',15)
+title(['maximal superinfection'], ['= ',num2str(round(superinfection_max_loop(5),1))],...
+    'interpreter','latex','FontSize',15)
+% subplot(2,5,6)
+% scatter(S_tot(:,6),S_tot_d(:,6),10,'filled')
+% title(['superfection = ', num2str(superinfection_max_loop(6))])
+% subplot(2,5,7)
+% scatter(S_tot(:,7),S_tot_d(:,7),10,'filled')
+% title(['superfection = ', num2str(superinfection_max_loop(7))])
+% subplot(2,5,8)
+% scatter(S_tot(:,8),S_tot_d(:,8),10,'filled')
+% title(['superfection = ', num2str(superinfection_max_loop(8))])
+% subplot(2,5,9)
+% scatter(S_tot(:,9),S_tot_d(:,9),10,'filled')
+% title(['superfection = ', num2str(superinfection_max_loop(9))])
+% subplot(2,5,10)
+% scatter(S_tot(:,10),S_tot_d(:,10),10,'filled')
+% title(['superfection = ', num2str(superinfection_max_loop(10))])
