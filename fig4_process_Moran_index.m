@@ -77,10 +77,14 @@ end
 W = sparse(iw,jw,ww);
 
 % Loop over all persistent simulation
-I_H = [];
-I_S = [];
-seuil_H = [];
+IL_H = [];  % Leo index
+IL_S = [];
+IM_H = []; % Moran index global
+IM_S = [];
+seuil_H = []; % Mean of Moran ondex under random assumption
 seuil_S = [];
+IG_H = [];    % Geary index local
+IG_S = [];
 parfor jj = 1:length(index)
     simulation = out_simulation{index(jj)};
     Host = out_host{index(jj)};
@@ -88,10 +92,14 @@ parfor jj = 1:length(index)
     tmax = size(simulation,2);
     
     % Moran index for hosts and symbionts
-    I_Ht = []; % host
-    I_St = []; % symbiont
+    IM_Ht = []; % host
+    IM_St = []; % symbiont
+    IL_Ht = []; % host
+    IL_St = []; % symbiont
     seuil_host_t = [];
     seuil_symbiont_t = [];
+    IG_Ht = []; % host
+    IG_St = []; % symbiont
     for tt = 1:size(simulation,2)
         if mod(tt,1)==0
             simu = simulation(:,tt);
@@ -106,13 +114,37 @@ parfor jj = 1:length(index)
             W_symbiont_simu = W((simu==3)',:);
             W_symbiont_simu = W_symbiont_simu(:,(simu==3));
             
+            %%% MORAN INDEX
             I_host = (host_simu-host_simu_mean)'*W_host_simu*(host_simu-host_simu_mean)...
                 ./var(host_simu)./sum(W_host_simu,'all');
             I_symbiont = (symbiont_simu-symbiont_simu_mean)'*W_symbiont_simu*(symbiont_simu-symbiont_simu_mean)...
                 ./var(symbiont_simu)./sum(W_symbiont_simu,'all');
-            I_Ht = [I_Ht,I_host];
-            I_St = [I_St,I_symbiont];
+            IM_Ht = [IM_Ht,I_host];
+            IM_St = [IM_St,I_symbiont];
             
+            %%% GEARY INDEX
+            IG_host = ((sum(W_host_simu)+sum(W_host_simu,2)')*(host_simu.*host_simu) ...
+                      - 2*host_simu'*W_host_simu*host_simu)...
+                      ./var(host_simu)./sum(W_host_simu,'all')/2;
+            IG_symbiont = ((sum(W_symbiont_simu)+sum(W_symbiont_simu,2)')*(symbiont_simu.*symbiont_simu) ...
+                      - 2*symbiont_simu'*W_symbiont_simu*symbiont_simu)...
+                      ./var(symbiont_simu)./sum(W_symbiont_simu,'all')/2;
+            IG_Ht = [IG_Ht,IG_host];
+            IG_St = [IG_St,IG_symbiont];
+            
+            %%% LEO INDEX
+            sW_host = full(sum(W_host_simu,2));        
+            IL_host = sum((sW_host~=0).*(host_simu - W_host_simu*host_simu./(sW_host + (sW_host==0)) ).^2)...
+                      ./var(host_simu)./(sum(sW_host~=0)-1);
+            
+            sW_symbiont = full(sum(W_symbiont_simu,2));
+            IL_symbiont = sum((sW_symbiont~=0).*(symbiont_simu - W_symbiont_simu*symbiont_simu./(sW_symbiont + (sW_symbiont==0)) ).^2)...
+                      ./var(symbiont_simu)./(sum(sW_symbiont~=0)-1);
+
+            IL_Ht = [IL_Ht,IL_host];
+            IL_St = [IL_St,IL_symbiont];
+            
+            %%%% POP SIZE
             sht = 1./(length(host_simu)-1);
             sst = 1./(length(symbiont_simu)-1);
             seuil_host_t = [seuil_host_t,sht];
@@ -120,12 +152,16 @@ parfor jj = 1:length(index)
             
         end
     end
-    I_H = [I_H;I_Ht];
-    I_S = [I_S;I_St];
+    IM_H = [IM_H;IM_Ht];
+    IM_S = [IM_S;IM_St];
     seuil_H = [seuil_H;seuil_host_t];
     seuil_S = [seuil_S;seuil_symbiont_t];
+    IG_H = [IG_H;IG_Ht];
+    IG_S = [IG_S;IG_St];
+    IL_H = [IL_H;IL_Ht];
+    IL_S = [IL_S;IL_St];
 end
-save(['Index_Moran','.mat'],'I_H','I_S','-v7.3')
+save(['Index_Moran','.mat'],'IM_H','IM_S','seuil_H','seuil_S','IG_H','IG_S','IL_H','IL_S','-v7.3')
 
 %% INTERSPECIFIC INDEX of correlation
 load('data/simulations_gamma02_d_persist.mat')
